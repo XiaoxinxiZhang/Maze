@@ -11,55 +11,81 @@ class Maze:
     # 定义四个方向：上、下、左、右
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-    def __init__(self, size_x, size_y, start_x=1, start_y=1, wall_sign='@', road_sign=' '):
+    def __init__(self, size_x, size_y,
+                 start_x=1, start_y=1,
+                 wall_sign='@', road_sign=' ', person_sign='P'):
+        """
+
+        :param size_x: 迷宫的宽度
+        :param size_y: 迷宫的长度
+        :param start_x: 小人的起始点，左上角为(0,0)
+        :param start_y:
+        :param wall_sign: 墙的符号
+        :param road_sign: 路的符号
+        :param person_sign: 小人的符号
+        """
         self.size_x = size_x
         self.size_y = size_y
         self.start_x = start_x
         self.start_y = start_y
         self.wall_sign = wall_sign
         self.road_sign = road_sign
-        self.data = [['@'] * size_y] * size_x
+        self.person_sign = person_sign
+        self.data = [[' '] * size_y for _ in range(size_x)]
 
-    # 随机生成迷宫
-    # def generate_maze(m, n, start_x, start_y):
-    #     # 初始化迷宫周围全为墙，中间全为路
-    #     maze = [[1 for _ in range(m)] for _ in range(n)]
-    #
-    #     for i in range(m):
-    #         for j in range(n):
-    #             if i == 0 or i == m - 1 or j == 0 or j == n - 1:
-    #                 maze[i][j] = random.choices([1, 0], weights=[0.1, 0.9])[0]
-    #
-    #     for i in range(int(m * n * 0.3)):
-    #         r_x = random.randint(0, m - 1)
-    #         r_y = random.randint(0, n - 1)
-    #         maze[r_x][r_y] = 0
-    #     # 确保起点为路径
-    #     maze[start_x][start_y] = 1
-    #
-    #     return maze
-    #
-    # # 判断当前位置是否在迷宫范围内且是路径
-    # def is_valid(x, y):
-    #     return 0 <= x < n and 0 <= y < m and maze[x][y] == 1
-    #
-    # # 打印当前的迷宫状态
-    # def print_maze(maze, x, y):
-    #     # 清除屏幕
-    #     os.system('cls' if os.name == 'nt' else 'clear')
-    #
-    #     # 创建一个临时的迷宫副本，转化为字符表示
-    #     maze_copy = []
-    #     for row in maze:
-    #         maze_copy.append([' ' if cell == 1 else '@' for cell in row])  # ' '为路径，'@'为墙
-    #     maze_copy[x][y] = 'P'  # 将小人位置标记为'P'
-    #
-    #     # 打印迷宫
-    #     for row in maze_copy:
-    #         print(''.join(row))
-    #     time.sleep(1)  # 暂停0.5秒，让每步显示清晰
-    #
-    # # 深度优先搜索
+    def generate(self, p_wall_edge=0.9, p_wall_inside=0.3):
+        """
+        随机初始化迷宫，起点为路
+        默认四周为有 90% 的概率为墙，中间有 10% 的概率为墙
+        :return: None
+        """
+
+        for i in range(self.size_x):
+            for j in range(self.size_y):
+                if i == 0 or i == self.size_x - 1 or j == 0 or j == self.size_y - 1:
+                    self.data[i][j] = \
+                    random.choices([self.wall_sign, self.road_sign], weights=[p_wall_edge, 1 - p_wall_edge])[0]
+                else:
+                    self.data[i][j] = random.choices([self.wall_sign,
+                                                      self.road_sign],
+                                                     weights=[p_wall_inside, 1 - p_wall_inside])[0]
+        # 确保起点为路径
+        self.data[self.start_x][self.start_y] = self.road_sign
+
+    def is_valid(self, x, y):
+        """
+        判断当前位置是否在迷宫范围内，且为路径
+        :param x: 迷宫纵坐标 [0,size_x-1)
+        :param y: 迷宫横坐标 [0,size_y-1)
+        :return: True or False
+        """
+        return 0 <= x < self.size_x - 1 \
+            and 0 <= y < self.size_y - 1 \
+            and self.data[x][y] == self.road_sign
+
+    def print_maze(self, x, y, t):
+        """
+
+        :param x: 小人当前纵坐标
+        :param y: 小人当前横坐标
+        :param t: 打印后的等待时间
+        :return: None
+        """
+        # 清除屏幕
+        # os.system('cls')
+
+        # 创建一个临时的迷宫副本，转化为字符表示
+        maze_copy = self.data.copy()
+
+        # 将多个位置
+        maze_copy[x][y] = self.person_sign
+
+        # 打印迷宫
+        for row in maze_copy:
+            print(''.join(row))
+        time.sleep(t)
+
+        # # 深度优先搜索
     # def dfs(x, y, visited):
     #     global track
     #     # 如果当前点在迷宫外围且是路，获胜
@@ -93,8 +119,14 @@ class Maze:
 
 
 if __name__ == '__main__':
-    m = Maze(10, 5)
-    print()
+    m = Maze(10, 10)
+
+    # 随机生成迷宫
+    m.generate()
+
+    if m.is_valid(2, 2):
+        m.print_maze(2, 2, 1)
+
     # # 假设小人的起点是(1, 1)
     # start_x, start_y = 1, 1
     #
