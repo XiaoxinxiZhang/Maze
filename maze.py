@@ -6,26 +6,28 @@ import random
 class Maze:
     DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-    def __init__(self, width=10, height=10, start_x=1, start_y=1):
+    def __init__(self, width=10, height=10, start_x=1, start_y=1, p_edge=0.9, p_internal=0.3):
         self.width = width
         self.height = height
         self.start = (start_x, start_y)
-        self.maze = self.generate_maze(start_x, start_y)
+        self.maze = self.generate_maze(start_x, start_y, p_edge, p_internal)
 
-    def generate_maze(self, start_x, start_y):
+    def generate_maze(self, start_x, start_y, p_edge=0.9, p_internal=0.3):
         """生成随机迷宫结构"""
+
+        # 初始化全为路的迷宫
         maze = [[1 for _ in range(self.width)] for _ in range(self.height)]
 
-        # 边界生成随机墙
+        # 边界生成随机墙，默认概率为 90%
         for i in range(self.height):
             for j in range(self.width):
                 if i == 0 or i == self.height - 1 or j == 0 or j == self.width - 1:
-                    maze[i][j] = random.choices([1, 0], weights=[0.1, 0.9])[0]
+                    maze[i][j] = random.choices([1, 0], weights=[1 - p_edge, p_edge])[0]
 
-        # 添加随机障碍
-        for _ in range(int(self.height * self.width * 0.3)):
-            r_x = random.randint(0, self.height - 1)
-            r_y = random.randint(0, self.width - 1)
+        # 内部添加随机障碍，默认其中 30% 为障碍
+        for _ in range(int((self.height - 2) * (self.width - 2) * p_internal)):
+            r_x = random.randint(1, self.height - 2)
+            r_y = random.randint(1, self.width - 2)
             maze[r_x][r_y] = 0
 
         # 确保起点畅通
