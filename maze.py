@@ -38,7 +38,7 @@ class Maze:
         """检查位置是否可通行"""
         return 0 <= x < self.height and 0 <= y < self.width and self.maze[x][y] == 1
 
-    def print_state(self, x, y, path_marker=None):
+    def print_state(self, x, y, path_marker=' ', wall_marker='@', person_marker='P'):
         """打印带玩家位置的迷宫状态"""
         os.system('cls')
         display = []
@@ -46,11 +46,11 @@ class Maze:
             line = []
             for j, cell in enumerate(row):
                 if (i, j) == (x, y):
-                    line.append('P')
-                elif path_marker and (i, j) in path_marker:
-                    line.append(path_marker[(i, j)])
-                else:
-                    line.append(' ' if cell == 1 else '@')
+                    line.append(person_marker)
+                elif cell == 1:
+                    line.append(path_marker)
+                elif cell == 0:
+                    line.append(wall_marker)
             display.append(''.join(line))
         print('\n'.join(display))
         time.sleep(0.5)
