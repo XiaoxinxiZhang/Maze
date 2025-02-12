@@ -5,12 +5,22 @@ import re
 
 
 class Maze:
-    DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-
+    """迷宫类，数据结构为列表套列表"""
     def __init__(self, width=10, height=10,
                  start_x=1, start_y=1,
                  p_edge=0.9, p_internal=0.3,
                  path_marker=' ', wall_marker='@'):
+        """
+
+        :param width: 宽度，即 len(maze)
+        :param height: 高度，即 len(maze[0])
+        :param start_x: 起点坐标 x
+        :param start_y: 起点坐标 y
+        :param p_edge: 边界为墙的概率
+        :param p_internal: 内部墙的占比
+        :param path_marker: 路的符号
+        :param wall_marker: 墙的符号
+        """
         self.width = width
         self.height = height
         self.start = (start_x, start_y)
@@ -20,7 +30,11 @@ class Maze:
         self.print_maze(path_marker=path_marker, wall_marker=wall_marker)
 
     def generate_maze(self, start_x, start_y, p_edge=0.9, p_internal=0.3):
-        """生成随机迷宫结构"""
+        """
+        生成随机迷宫结构
+
+        1代表路，2代表墙
+        """
 
         # 初始化全为路的迷宫
         maze = [[1 for _ in range(self.width)] for _ in range(self.height)]
@@ -58,15 +72,32 @@ class Maze:
 
 
 class MazeSolver:
+    """迷宫求解器"""
+
+    # 每次可选择的方向
+    DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
     def __init__(self, maze, person_marker='P'):
+        """
+
+        :param maze: 迷宫对象
+        :param person_marker: 小人的符号
+        """
         self.maze = maze
-        self.last_x, self.last_y = -1, -1  # 记录上一次小人位置
         self.person_marker = person_marker
+
+        # 记录迷宫的某位置是否经过
         self.visited = [[False for _ in range(maze.width)] for _ in range(maze.height)]
+
+        # 记录上一次小人位置
+        self.last_x, self.last_y = -1, -1
+
+        # 记录小人走过的路径
         self.track = []
 
     def dfs(self, x, y):
         """深度优先搜索算法"""
+
         # 到达边界则成功
         if x == 0 or x == self.maze.height - 1 or y == 0 or y == self.maze.width - 1:
             self.track.append((x, y))
@@ -78,7 +109,7 @@ class MazeSolver:
         self.print_state(x, y)
 
         # 尝试四个方向
-        for dx, dy in Maze.DIRECTIONS:
+        for dx, dy in self.DIRECTIONS:
             nx, ny = x + dx, y + dy
             if self.maze.is_valid(nx, ny) and not self.visited[nx][ny]:
                 if self.dfs(nx, ny):
@@ -107,6 +138,8 @@ class MazeSolver:
 
     def _handle_backtracking(self, origin_x, origin_y):
         """处理回溯时的路径显示"""
+        del self.track[-1]
+
         while self.track:
             last_pos = self.track.pop()
             self.print_state(*last_pos)
@@ -116,7 +149,6 @@ class MazeSolver:
 
     def show_result(self):
         """显示最终路径"""
-        path_marker = {}
         for i, (x, y) in enumerate(self.track):
             print(f"\033[{x + 1};{y + 1}H", end="")
             if i == 0:
@@ -137,12 +169,10 @@ class MazeSolver:
             print("\nNo solution found!")
 
         print(f"\033[{self.maze.height + 1};{self.maze.width + 1}H", end='')
-        os.system("pause")
+        input("\n\nPress any key to exit...")
 
 
 if __name__ == '__main__':
-    os.system("cls")
-
     # 初始化迷宫和求解器
     str_hw = input("Create a maze, and the size is (height x width): ")
     r1 = re.match(r"^\D*(\d+)(?# 迷宫的高度)"
