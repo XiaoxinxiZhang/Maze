@@ -171,7 +171,7 @@ class MazeSolver:
             print("\nNo solution found!")
 
         print(f"\033[{self.maze.height + 1};{self.maze.width + 1}H", end='')
-        input("\n\nPress any key to exit...")
+        input("\n\nPress enter to exit...")
 
 
 if __name__ == '__main__':
@@ -184,7 +184,7 @@ if __name__ == '__main__':
 
     str_xy = input("[Input] Creat a person,and the position is (x , y):")
     r2 = re.match(r"^\D*(\d+)(?# 横坐标)"
-                  r"\D(?# 中间的任意字符)"
+                  r"\D+(?# 中间的任意字符)"
                   r"(\d+)\D*$(?# 纵坐标)", str_xy).groups()
     x, y = int(r2[0]), int(r2[1])
 
