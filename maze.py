@@ -1,6 +1,7 @@
 import time
 import os
 import random
+import re
 
 
 class Maze:
@@ -125,30 +126,42 @@ class MazeSolver:
             else:
                 print('.', end="", flush=True)
 
+    def run(self):
+        """执行搜索算法"""
+        if self.dfs(*self.maze.start):
+            print(f"\033[{self.maze.height + 1};{self.maze.width + 1}H", end='')
+            print("\nSuccess!")
+            solver.show_result()
+        else:
+            print(f"\033[{self.maze.height + 1};{self.maze.width + 1}H", end='')
+            print("\nNo solution found!")
+
+        print(f"\033[{self.maze.height + 1};{self.maze.width + 1}H", end='')
+        os.system("pause")
+
 
 if __name__ == '__main__':
+    os.system("cls")
+
     # 初始化迷宫和求解器
-    h = int(input("请输入迷宫的高度："))
-    w = int(input("请输入迷宫的宽度："))
-    sx = int(input(f"请输入小人的起点 x 坐标 [0,{h - 1})："))
-    sy = int(input(f"请输入小人的起点 y 坐标 [0,{w - 1})："))
+    str_hw = input("Create a maze, and the size is (height x width): ")
+    r1 = re.match(r"^\D*(\d+)(?# 迷宫的高度)"
+                  r"\D+(?# 中间的任意字符)"
+                  r"(\d+)\D*$(?# 迷宫的宽度)", str_hw).groups()
+    h, w = int(r1[0]), int(r1[1])
+
+    str_xy = input("Creat a person,and the position of (x , y):")
+    r2 = re.match(r"^\D*(\d+)(?# 横坐标)"
+                  r".+(?# 中间的任意字符)"
+                  r"(\d+)\D*$(?# 纵坐标)", str_xy).groups()
+    x, y = int(r2[0]), int(r2[1])
 
     os.system("cls")
-    print(f"Maze size: {h} x {w}; Start Point: ({sx} , {sy})")
+    print(f"Maze size: {h} x {w}; Start Point: ({x} , {y})")
     time.sleep(3)
 
-    maze = Maze(height=h, width=w, start_x=sx, start_y=sy)
+    maze = Maze(height=h, width=w, start_x=x, start_y=y)
 
     solver = MazeSolver(maze)
 
-    # 执行搜索算法
-    if solver.dfs(*maze.start):
-        print(f"\033[{maze.height + 1};{maze.width + 1}H", end='')
-        print("\nSuccess!")
-        solver.show_result()
-    else:
-        print(f"\033[{maze.height + 1};{maze.width + 1}H", end='')
-        print("\nNo solution found!")
-
-    print(f"\033[{maze.height + 1};{maze.width + 1}H", end='')
-    os.system("pause")
+    solver.run()
