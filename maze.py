@@ -138,6 +138,8 @@ class MazeSolver:
 
     def _handle_backtracking(self, origin_x, origin_y):
         """处理回溯时的路径显示"""
+
+        # 避免走到死路时，同一个位置显示两次
         del self.track[-1]
 
         while self.track:
@@ -174,24 +176,26 @@ class MazeSolver:
 
 if __name__ == '__main__':
     # 初始化迷宫和求解器
-    str_hw = input("Create a maze, and the size is (height x width): ")
+    str_hw = input("[Input] Create a maze, and the size is (height x width): ")
     r1 = re.match(r"^\D*(\d+)(?# 迷宫的高度)"
                   r"\D+(?# 中间的任意字符)"
                   r"(\d+)\D*$(?# 迷宫的宽度)", str_hw).groups()
     h, w = int(r1[0]), int(r1[1])
 
-    str_xy = input("Creat a person,and the position of (x , y):")
+    str_xy = input("[Input] Creat a person,and the position is (x , y):")
     r2 = re.match(r"^\D*(\d+)(?# 横坐标)"
                   r".+(?# 中间的任意字符)"
                   r"(\d+)\D*$(?# 纵坐标)", str_xy).groups()
     x, y = int(r2[0]), int(r2[1])
 
+    # 输出参数
     os.system("cls")
     print(f"Maze size: {h} x {w}; Start Point: ({x} , {y})")
     time.sleep(3)
 
+    # 构建迷宫
     maze = Maze(height=h, width=w, start_x=x, start_y=y)
 
+    # 迷宫求解并在控制台可视化
     solver = MazeSolver(maze)
-
     solver.run()
