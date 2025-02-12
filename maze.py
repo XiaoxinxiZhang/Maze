@@ -2,127 +2,129 @@ import time
 import os
 import random
 
-track = []
 
-# # 假设迷宫是一个8x9的二维数组，1表示可行走的路径，0表示墙
-# maze = [
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [0, 1, 0, 1, 0, 1, 1, 0, 0],
-#     [0, 1, 1, 1, 0, 1, 1, 0, 0],
-#     [0, 1, 0, 0, 0, 1, 1, 1, 0],
-#     [0, 1, 1, 1, 0, 0, 0, 1, 0],
-#     [0, 0, 0, 1, 1, 1, 0, 0, 0],
-#     [0, 1, 1, 1, 1, 0, 0, 1, 0],
-#     [0, 1, 0, 0, 0, 0, 0, 0, 0]
-# ]
+class Maze:
+    DIRECTIONS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-# 定义迷宫的大小
-n, m = 10, 10
+    def __init__(self, width=10, height=10, start_x=1, start_y=1):
+        self.width = width
+        self.height = height
+        self.start = (start_x, start_y)
+        self.maze = self.generate_maze(start_x, start_y)
 
-# 定义四个方向：上、下、左、右
-directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    def generate_maze(self, start_x, start_y):
+        """生成随机迷宫结构"""
+        maze = [[1 for _ in range(self.width)] for _ in range(self.height)]
 
+        # 边界生成随机墙
+        for i in range(self.height):
+            for j in range(self.width):
+                if i == 0 or i == self.height - 1 or j == 0 or j == self.width - 1:
+                    maze[i][j] = random.choices([1, 0], weights=[0.1, 0.9])[0]
 
-# 随机生成迷宫
-def generate_maze(m, n, start_x, start_y):
-    # 初始化迷宫周围全为墙，中间全为路
-    maze = [[1 for _ in range(m)] for _ in range(n)]
+        # 添加随机障碍
+        for _ in range(int(self.height * self.width * 0.3)):
+            r_x = random.randint(0, self.height - 1)
+            r_y = random.randint(0, self.width - 1)
+            maze[r_x][r_y] = 0
 
-    for i in range(m):
-        for j in range(n):
-            if i == 0 or i == m - 1 or j == 0 or j == n - 1:
-                maze[i][j] = random.choices([1, 0], weights=[0.1, 0.9])[0]
+        # 确保起点畅通
+        maze[start_x][start_y] = 1
+        return maze
 
-    for i in range(int(m * n * 0.3)):
-        r_x = random.randint(0, m - 1)
-        r_y = random.randint(0, n - 1)
-        maze[r_x][r_y] = 0
-    # 确保起点为路径
-    maze[start_x][start_y] = 1
+    def is_valid(self, x, y):
+        """检查位置是否可通行"""
+        return 0 <= x < self.height and 0 <= y < self.width and self.maze[x][y] == 1
 
-    return maze
-
-
-# 判断当前位置是否在迷宫范围内且是路径
-def is_valid(x, y):
-    return 0 <= x < n and 0 <= y < m and maze[x][y] == 1
-
-
-# 打印当前的迷宫状态
-def print_maze(maze, x, y):
-    # 清除屏幕
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-    # 创建一个临时的迷宫副本，转化为字符表示
-    maze_copy = []
-    for row in maze:
-        maze_copy.append([' ' if cell == 1 else '@' for cell in row])  # ' '为路径，'@'为墙
-    maze_copy[x][y] = 'P'  # 将小人位置标记为'P'
-
-    # 打印迷宫
-    for row in maze_copy:
-        print(''.join(row))
-    time.sleep(1)  # 暂停0.5秒，让每步显示清晰
+    def print_state(self, x, y, path_marker=None):
+        """打印带玩家位置的迷宫状态"""
+        os.system('cls')
+        display = []
+        for i, row in enumerate(self.maze):
+            line = []
+            for j, cell in enumerate(row):
+                if (i, j) == (x, y):
+                    line.append('P')
+                elif path_marker and (i, j) in path_marker:
+                    line.append(path_marker[(i, j)])
+                else:
+                    line.append(' ' if cell == 1 else '@')
+            display.append(''.join(line))
+        print('\n'.join(display))
+        time.sleep(0.5)
 
 
-# 深度优先搜索
-def dfs(x, y, visited):
-    global track
-    # 如果当前点在迷宫外围且是路，获胜
-    if x == 0 or x == n - 1 or y == 0 or y == m - 1:
-        print_maze(maze, x, y)  # 打印当前状态
-        track.append([x, y])
-        return True
+class MazeSolver:
+    def __init__(self, maze):
+        self.maze = maze
+        self.visited = [[False for _ in range(maze.width)] for _ in range(maze.height)]
+        self.track = []
 
-    visited[x][y] = True  # 标记当前位置为已访问
-    print_maze(maze, x, y)  # 打印当前状态
-    track.append([x, y])
+    def dfs(self, x, y):
+        """深度优先搜索算法"""
+        # 到达边界则成功
+        if x == 0 or x == self.maze.height - 1 or y == 0 or y == self.maze.width - 1:
+            self.track.append((x, y))
+            self.maze.print_state(x, y)
+            return True
 
-    # 探索四个方向
-    for dx, dy in directions:
-        nx, ny = x + dx, y + dy
-        if is_valid(nx, ny) and not visited[nx][ny]:
-            if dfs(nx, ny, visited):
-                return True  # 如果找到了成功路径，返回True
+        self.visited[x][y] = True
+        self.track.append((x, y))
+        self.maze.print_state(x, y)
+
+        # 尝试四个方向
+        for dx, dy in Maze.DIRECTIONS:
+            nx, ny = x + dx, y + dy
+            if self.maze.is_valid(nx, ny) and not self.visited[nx][ny]:
+                if self.dfs(nx, ny):
+                    return True
+                else:
+                    # 回溯时清除错误路径
+                    self._handle_backtracking(x, y)
+
+        return False
+
+    def _handle_backtracking(self, origin_x, origin_y):
+        """处理回溯时的路径显示"""
+        while self.track:
+            last_pos = self.track.pop()
+            self.maze.print_state(*last_pos)
+            if last_pos == (origin_x, origin_y):
+                self.track.append(last_pos)
+                break
+
+    def show_result(self):
+        """显示最终路径"""
+        path_marker = {}
+        for i, (x, y) in enumerate(self.track):
+            if i == 0:
+                path_marker[(x, y)] = 'S'
+            elif i == len(self.track) - 1:
+                path_marker[(x, y)] = 'E'
             else:
-                del track[-1]
-                while True:
-                    if not track:
-                        break
-                    xy = track.pop()
-                    print_maze(maze, xy[0], xy[1])  # 打印当前状态
-                    if xy[0] == x and xy[1] == y:
-                        track.append(xy)
-                        break
-
-    return False  # 如果四个方向都无法找到路径，返回False
+                path_marker[(x, y)] = '.'
+        self.maze.print_state(-1, -1, path_marker)  # 使用无效坐标触发全图显示
 
 
 if __name__ == '__main__':
-    # 假设小人的起点是(1, 1)
-    start_x, start_y = 1, 1
+    # 初始化迷宫和求解器
+    h = int(input("请输入迷宫的高度："))
+    w = int(input("请输入迷宫的宽度："))
+    sx = int(input(f"请输入小人的起点 x 坐标 [0,{h - 1})："))
+    sy = int(input(f"请输入小人的起点 y 坐标 [0,{w - 1})："))
 
-    # 随机生成迷宫
-    maze = generate_maze(10, 10, start_x, start_x)
+    os.system("cls")
+    print(f"Maze size: {h} x {w}; Start Point: ({sx} , {sy})")
+    time.sleep(3)
 
-    # 创建一个访问记录的数组
-    visited = [[False for _ in range(m)] for _ in range(n)]
+    maze = Maze(height=h, width=w, start_x=sx, start_y=sy)
+    solver = MazeSolver(maze)
 
-    # 调用深度优先搜索
-    if dfs(start_x, start_y, visited):
-        print("\nsuccess!\n\nTrack:\n")
-        # 创建一个临时的迷宫副本，转化为字符表示
-        maze_copy = []
-        for row in maze:
-            maze_copy.append([' ' if cell == 1 else '@' for cell in row])  # ' '为路径，'@'为墙
-        for i, xy in enumerate(track):
-            if i == 0:
-                maze_copy[xy[0]][xy[1]] = 'S'
-            elif i == len(track) - 1:
-                maze_copy[xy[0]][xy[1]] = 'E'
-            else:
-                maze_copy[xy[0]][xy[1]] = '.'
-        for row in maze_copy:
-            print(''.join(row))
+    # 执行搜索算法
+    if solver.dfs(*maze.start):
+        print("\nSuccess! Path:")
+        solver.show_result()
     else:
-        print("\nlose!")
+        print("\nNo solution found!")
+
+    os.system("pause")
